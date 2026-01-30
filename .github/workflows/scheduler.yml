@@ -1,0 +1,30 @@
+name: Tweet Scheduler
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # 15分ごとに実行
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  schedule-tweets:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run scheduler
+      run: node scripts/scheduler.js
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        API_KEY: ${{ secrets.API_KEY }}
+        NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
