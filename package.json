@@ -9,7 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@steipete/bird": "^0.8.0",
+    "@supabase/supabase-js": "^2.93.1",
+    "axios": "^1.13.3",
+    "better-sqlite3": "^12.6.2",
+    "date-fns": "^4.1.0",
+    "dompurify": "^3.3.1",
+    "lucide-react": "^0.563.0",
     "next": "16.1.5",
+    "otplib": "^13.2.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
