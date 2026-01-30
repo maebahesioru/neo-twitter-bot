@@ -195,8 +195,18 @@ export default function Home() {
       return;
     }
 
+    if (tweetType === 'quote' && !tweetText.trim() && mediaFiles.length === 0) {
+      alert('引用ツイートの内容または画像を入力してください');
+      return;
+    }
+
     if (tweetType === 'reply' && !replyTweetId) {
       alert('返信するツイートIDを入力してください');
+      return;
+    }
+
+    if (tweetType === 'reply' && !tweetText.trim() && mediaFiles.length === 0) {
+      alert('返信の内容または画像を入力してください');
       return;
     }
 

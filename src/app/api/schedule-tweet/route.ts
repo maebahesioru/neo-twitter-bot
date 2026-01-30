@@ -41,11 +41,24 @@ async function handlePOST(request: NextRequest) {
     const quoteTweetId = formData.get('quoteTweetId') as string;
     const replyTweetId = formData.get('replyTweetId') as string;
 
-    // Validate inputs
+    // Check if media files exist
+    const rawMediaFiles: Array<{ file: File; type: 'image' | 'video' | 'gif' }> = [];
+    let mediaIndex = 0;
+    while (formData.get(`media_${mediaIndex}`)) {
+      const file = formData.get(`media_${mediaIndex}`) as File;
+      const type = formData.get(`mediaType_${mediaIndex}`) as 'image' | 'video' | 'gif';
+      rawMediaFiles.push({ file, type });
+      mediaIndex++;
+    }
+
+    // Validate inputs - text is required only if no media files
     if (tweetType !== 'retweet') {
-      const textValidation = validateTweetText(text);
-      if (!textValidation.valid) {
-        return NextResponse.json({ error: textValidation.error }, { status: 400 });
+      const hasMedia = rawMediaFiles.length > 0;
+      if (!hasMedia) {
+        const textValidation = validateTweetText(text);
+        if (!textValidation.valid) {
+          return NextResponse.json({ error: textValidation.error }, { status: 400 });
+        }
       }
     }
 
@@ -77,26 +90,24 @@ async function handlePOST(request: NextRequest) {
       }
     }
 
-    const mediaFiles: Array<{ file: string; type: 'image' | 'video' | 'gif' }> = [];
-    let mediaIndex = 0;
-    while (formData.get(`media_${mediaIndex}`)) {
-      const file = formData.get(`media_${mediaIndex}`) as File;
-      const type = formData.get(`mediaType_${mediaIndex}`) as 'image' | 'video' | 'gif';
+    // Process and validate media files
+    const processedMediaFiles: Array<{ file: string; type: 'image' | 'video' | 'gif' }> = [];
+    for (let i = 0; i < rawMediaFiles.length; i++) {
+      const media = rawMediaFiles[i];
       
-      const fileValidation = validateFile(file);
+      const fileValidation = validateFile(media.file);
       if (!fileValidation.valid) {
         return NextResponse.json({ error: fileValidation.error }, { status: 400 });
       }
       
-      const bytes = await file.arrayBuffer();
+      const bytes = await media.file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const base64 = buffer.toString('base64');
       
-      mediaFiles.push({
+      processedMediaFiles.push({
         file: base64,
-        type
+        type: media.type
       });
-      mediaIndex++;
     }
 
     let scheduledDate: Date;
@@ -134,7 +145,7 @@ async function handlePOST(request: NextRequest) {
       .insert({
         id: Date.now().toString(),
         text: sanitizeInput(text),
-        media: mediaFiles,
+        media: processedMediaFiles,
         scheduled_time: scheduledTimeString,
         tweet_type: tweetType,
         retweet_id: retweetId,
